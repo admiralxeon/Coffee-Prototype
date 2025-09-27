@@ -67,19 +67,54 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (Input.GetKeyDown(interactKey))
         {
-            if (currentInteractable != null && currentInteractable.CanInteract())
+            Debug.Log($"Interaction key ({interactKey}) pressed!");
+            
+            if (currentInteractable != null)
             {
-                currentInteractable.OnInteract();
+                Debug.Log($"Current interactable: {currentInteractableCollider.name}");
+                Debug.Log($"Can interact: {currentInteractable.CanInteract()}");
+                Debug.Log($"Interaction text: {currentInteractable.GetInteractionText()}");
                 
-                if (!currentInteractable.CanInteract())
+                if (currentInteractable.CanInteract())
                 {
-                    OnInteractionUnavailable?.Invoke();
+                    Debug.Log("Calling OnInteract()...");
+                    currentInteractable.OnInteract();
+                    Debug.Log("OnInteract() completed!");
+                    
+                    // Update UI after interaction
+                    if (!currentInteractable.CanInteract())
+                    {
+                        OnInteractionUnavailable?.Invoke();
+                    }
+                    else
+                    {
+                        OnInteractionAvailable?.Invoke(currentInteractable.GetInteractionText());
+                    }
                 }
                 else
                 {
-                    OnInteractionAvailable?.Invoke(currentInteractable.GetInteractionText());
+                    Debug.Log("Cannot interact with this object right now");
                 }
             }
+            else
+            {
+                Debug.Log("No interactable object detected");
+            }
+        }
+    }
+    
+    // Debug method to show current state
+    private void OnDrawGizmos()
+    {
+        // Show interaction range
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, interactionRange);
+        
+        // Show line to current interactable
+        if (currentInteractableCollider != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(transform.position, currentInteractableCollider.transform.position);
         }
     }
 }
