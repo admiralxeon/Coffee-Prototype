@@ -15,7 +15,6 @@ public class CoffeeCup : MonoBehaviour, IInteractable
     {
         parentMachine = machine;
         
-        // Setup audio source
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
@@ -25,7 +24,6 @@ public class CoffeeCup : MonoBehaviour, IInteractable
         }
     }
     
-    // ===== IINTERACTABLE IMPLEMENTATION =====
     
     public string GetInteractionText()
     {
@@ -40,7 +38,6 @@ public class CoffeeCup : MonoBehaviour, IInteractable
         if (!canBePickedUp)
             return false;
         
-        // Check if player can carry more coffee cups
         PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
         if (playerInventory == null)
             return false;
@@ -57,29 +54,22 @@ public class CoffeeCup : MonoBehaviour, IInteractable
         if (playerInventory == null)
             return;
         
-        // Add to player inventory
         if (playerInventory.TryAddItem(ItemType.CoffeeCup))
         {
-            // Play pickup sound
             if (audioSource != null && pickupSound != null)
             {
                 audioSource.PlayOneShot(pickupSound);
             }
             
-            // Remove from parent machine
             if (parentMachine != null)
             {
                 parentMachine.RemoveCupFromMachine(gameObject);
             }
             
-            // Destroy this cup
-            Destroy(gameObject, 0.1f); // Small delay for sound
-            
-            Debug.Log("Coffee cup collected by player");
+            Destroy(gameObject, 0.1f);
         }
     }
     
-    // ===== VISUAL FEEDBACK =====
     
     private void OnDrawGizmos()
     {

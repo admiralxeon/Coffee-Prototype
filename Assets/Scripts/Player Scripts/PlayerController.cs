@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
         {
             GameObject stackPoint = new GameObject("BackStackPoint");
             stackPoint.transform.SetParent(transform);
-            stackPoint.transform.localPosition = new Vector3(0, 1.5f, -0.3f); 
+            stackPoint.transform.localPosition = new Vector3(0, 1.5f, -0.3f);
             backStackPoint = stackPoint.transform;
         }
     }

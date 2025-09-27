@@ -22,8 +22,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         new Keyframe(1f, 1f, 0f, 0f)
     );
     
-    [Header("Debug")]
-    [SerializeField] private bool enableDebugLogs = true;
     
     // Inventory data
     private Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
@@ -44,8 +42,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         inventory[ItemType.CoffeeBean] = 0;
         inventory[ItemType.CoffeeCup] = 0;
         inventory[ItemType.Money] = 0;
-        
-        DebugLog("Inventory initialized");
     }
     
     private void SetupStackingParent()
@@ -56,11 +52,9 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
             stackParent.transform.SetParent(transform);
             stackParent.transform.localPosition = stackOffset;
             stackingParent = stackParent.transform;
-            DebugLog("Created bean stacking parent");
         }
     }
     
-    // ===== IITEMCARRIER IMPLEMENTATION =====
     
     public bool CanCarryItem(ItemType itemType)
     {
@@ -71,7 +65,7 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
             case ItemType.CoffeeCup:
                 return GetItemCount(ItemType.CoffeeCup) < maxCoffees;
             case ItemType.Money:
-                return true; // Money has no limit
+                return true;
             default:
                 return false;
         }
@@ -81,11 +75,9 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
     {
         if (!CanCarryItem(itemType))
         {
-            DebugLog($"Cannot carry more {itemType}. Current: {GetItemCount(itemType)}, Max: {GetCapacity(itemType)}");
             return false;
         }
         
-        // Ensure the key exists before incrementing
         if (!inventory.ContainsKey(itemType))
         {
             inventory[itemType] = 0;
@@ -93,7 +85,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         
         inventory[itemType]++;
         
-        // Handle visual stacking for beans
         if (itemType == ItemType.CoffeeBean)
         {
             AddBeanToVisualStack();
@@ -101,7 +92,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         }
         
         OnInventoryChanged?.Invoke(itemType, inventory[itemType]);
-        DebugLog($"Added {itemType}. New count: {inventory[itemType]}");
         
         return true;
     }
@@ -110,13 +100,11 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
     {
         if (GetItemCount(itemType) <= 0)
         {
-            DebugLog($"Cannot remove {itemType} - inventory is empty");
             return false;
         }
         
         inventory[itemType]--;
         
-        // Handle visual stacking for beans
         if (itemType == ItemType.CoffeeBean)
         {
             RemoveBeanFromVisualStack();
@@ -124,7 +112,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         }
         
         OnInventoryChanged?.Invoke(itemType, inventory[itemType]);
-        DebugLog($"Removed {itemType}. New count: {inventory[itemType]}");
         
         return true;
     }
@@ -147,13 +134,11 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         }
     }
     
-    // ===== VISUAL STACKING SYSTEM =====
     
     private void AddBeanToVisualStack()
     {
         if (beanStackPrefab == null)
         {
-            DebugLog("Warning: Bean stack prefab not assigned!");
             return;
         }
         
@@ -163,10 +148,7 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         newBean.transform.localRotation = GetRandomRotation();
         
         visualBeanStack.Add(newBean);
-        
-        // Animate the bean appearing
         StartCoroutine(AnimateBeanAppear(newBean));
-        DebugLog($"Added visual bean to stack. Total: {visualBeanStack.Count}");
     }
     
     private void RemoveBeanFromVisualStack()
@@ -176,15 +158,11 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         
         GameObject beanToRemove = visualBeanStack[visualBeanStack.Count - 1];
         visualBeanStack.RemoveAt(visualBeanStack.Count - 1);
-        
-        // Animate the bean disappearing
         StartCoroutine(AnimateBeanDisappear(beanToRemove));
-        DebugLog($"Removed visual bean from stack. Remaining: {visualBeanStack.Count}");
     }
     
     private Vector3 GetStackPosition(int stackIndex)
     {
-        // Stack beans vertically with slight random offset for natural look
         float randomX = Random.Range(-0.05f, 0.05f);
         float randomZ = Random.Range(-0.05f, 0.05f);
         return new Vector3(randomX, stackIndex * stackSpacing, randomZ);
@@ -192,17 +170,15 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
     
     private Quaternion GetRandomRotation()
     {
-        // Small random rotation for natural look
         float randomY = Random.Range(-15f, 15f);
         return Quaternion.Euler(0, randomY, 0);
     }
     
     private System.Collections.IEnumerator AnimateBeanAppear(GameObject bean)
     {
-        Vector3 targetScale = Vector3.one * 0.3f; // Small bean size
+        Vector3 targetScale = Vector3.one * 0.3f;
         Vector3 targetPosition = bean.transform.localPosition;
         
-        // Start from above and scale from zero
         bean.transform.localScale = Vector3.zero;
         bean.transform.localPosition = targetPosition + Vector3.up * 0.5f;
         
@@ -252,7 +228,6 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         Destroy(bean);
     }
     
-    // ===== UTILITY METHODS =====
     
     public bool HasItems(ItemType itemType, int count = 1)
     {
@@ -264,15 +239,7 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         return !CanCarryItem(itemType);
     }
     
-    private void DebugLog(string message)
-    {
-        if (enableDebugLogs)
-        {
-            Debug.Log($"[PlayerInventory] {message}");
-        }
-    }
     
-    // ===== DEBUG METHODS =====
     
     [ContextMenu("Add Test Bean")]
     private void AddTestBean()

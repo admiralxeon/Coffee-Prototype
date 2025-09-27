@@ -25,13 +25,11 @@ public class InteractionPromptUI : MonoBehaviour
     {
         if (promptPanel == null)
         {
-            Debug.LogError("PromptPanel reference is NULL! Please assign it in the inspector.");
             return;
         }
         
         if (promptText == null)
         {
-            Debug.LogError("PromptText reference is NULL! Please assign it in the inspector.");
             return;
         }
     }
@@ -64,10 +62,6 @@ public class InteractionPromptUI : MonoBehaviour
             playerInteraction.OnInteractionAvailable += ShowPrompt;
             playerInteraction.OnInteractionUnavailable += HidePrompt;
         }
-        else
-        {
-            Debug.LogError("No PlayerInteraction found in scene!");
-        }
     }
     
     private void SetInitialState()
@@ -87,13 +81,11 @@ public class InteractionPromptUI : MonoBehaviour
     {
         if (promptPanel == null)
         {
-            Debug.LogError("Cannot show prompt - promptPanel is null!");
             return;
         }
         
         if (promptText == null)
         {
-            Debug.LogError("Cannot show prompt - promptText is null!");
             return;
         }
         
@@ -115,7 +107,6 @@ public class InteractionPromptUI : MonoBehaviour
     {
         if (canvasGroup == null)
         {
-            Debug.LogError("Cannot fade - canvasGroup is null!");
             yield break;
         }
         

@@ -52,7 +52,6 @@ public class Customer : MonoBehaviour
         currentState = CustomerState.MovingToCounter;
         patienceTimer = patienceTime;
         
-        // Hide speech bubble initially
         if (speechBubble != null)
         {
             speechBubble.SetActive(false);
@@ -91,26 +90,19 @@ public class Customer : MonoBehaviour
     {
         if (!agent.pathPending && agent.remainingDistance < 1.5f)
         {
-            // Reached the counter
             StartWaitingForOrder();
         }
     }
     
     private void HandleWaitingForOrder()
     {
-        // Decrease patience
         patienceTimer -= Time.deltaTime;
-        
-        // Update patience display
         UpdatePatienceDisplay();
         
-        // Check if patience runs out
         if (patienceTimer <= 0f)
         {
-            StartLeaving(false); // Leave without being served
+            StartLeaving(false);
         }
-        
-        // Play impatient sound occasionally
         if (patienceTimer < patienceTime * 0.3f && Random.Range(0f, 100f) < 1f)
         {
             PlaySound(impatientSound);
@@ -119,7 +111,6 @@ public class Customer : MonoBehaviour
     
     private void HandleOrderReceived()
     {
-        // Customer received their order, start leaving
         StartLeaving(true);
     }
     
@@ -127,7 +118,6 @@ public class Customer : MonoBehaviour
     {
         if (!agent.pathPending && agent.remainingDistance < 1f)
         {
-            // Reached exit point, destroy customer
             if (spawner != null)
             {
                 spawner.OnCustomerDestroyed(this);
@@ -154,12 +144,8 @@ public class Customer : MonoBehaviour
     {
         currentState = CustomerState.WaitingForOrder;
         agent.isStopped = true;
-        
-        // Show speech bubble with order
         ShowOrder();
         PlaySound(orderSound);
-        
-        Debug.Log("Customer is waiting for order");
     }
     
     public void ReceiveOrder()
@@ -167,20 +153,10 @@ public class Customer : MonoBehaviour
         if (currentState != CustomerState.WaitingForOrder) return;
         
         currentState = CustomerState.OrderReceived;
-        
-        // Hide order, show thank you
         ShowThankYou();
         PlaySound(thankYouSound);
-        
-        // Add money to player
         GameManager.Instance?.AddMoney(paymentAmount);
-        
-        Debug.Log($"Customer received order and paid ${paymentAmount}");
-        
-        // Invoke served event
         OnCustomerServed?.Invoke(this);
-        
-        // Start leaving after a short delay
         StartCoroutine(DelayedLeaving());
     }
     
@@ -195,33 +171,22 @@ public class Customer : MonoBehaviour
         currentState = CustomerState.Leaving;
         agent.isStopped = false;
         
-        // Hide speech bubble
         if (speechBubble != null)
         {
             speechBubble.SetActive(false);
         }
         
-        // Move to a random exit point (or back to spawn)
         Vector3 exitPoint = FindExitPoint();
         agent.SetDestination(exitPoint);
-        
-        // Invoke left event
         OnCustomerLeft?.Invoke(this);
-        
-        if (!satisfied)
-        {
-            Debug.Log("Customer left unsatisfied (patience ran out)");
-        }
     }
     
     private Vector3 FindExitPoint()
     {
-        // Find a point far from the counter to leave towards
         Vector3 counterPos = targetCounter != null ? targetCounter.transform.position : transform.position;
         Vector3 direction = (transform.position - counterPos).normalized;
         Vector3 exitPoint = counterPos + direction * 20f;
         
-        // Make sure the exit point is on the NavMesh
         NavMeshHit hit;
         if (NavMesh.SamplePosition(exitPoint, out hit, 10f, NavMesh.AllAreas))
         {
@@ -267,7 +232,6 @@ public class Customer : MonoBehaviour
             else
             {
                 orderText.color = Color.red;
-                // Make text blink when very impatient
                 orderText.text = Time.time % 1f < 0.5f ? "I'd like coffee!" : "Where's my coffee?!";
             }
         }
@@ -275,11 +239,10 @@ public class Customer : MonoBehaviour
     
     private void UpdateSpeechBubbleRotation()
     {
-        // Make speech bubble always face the camera
         if (speechBubble != null && Camera.main != null)
         {
             speechBubble.transform.LookAt(Camera.main.transform);
-            speechBubble.transform.Rotate(0, 180, 0); // Flip to face camera correctly
+            speechBubble.transform.Rotate(0, 180, 0);
         }
     }
     
@@ -291,7 +254,6 @@ public class Customer : MonoBehaviour
         }
     }
     
-    // Public methods for external checking
     public bool IsWaitingForOrder()
     {
         return currentState == CustomerState.WaitingForOrder;
@@ -307,7 +269,6 @@ public class Customer : MonoBehaviour
         return patienceTimer / patienceTime;
     }
     
-    // Visual debugging
     private void OnDrawGizmosSelected()
     {
         if (agent != null && agent.hasPath)
@@ -320,7 +281,6 @@ public class Customer : MonoBehaviour
             }
         }
         
-        // Draw patience indicator
         if (currentState == CustomerState.WaitingForOrder)
         {
             Gizmos.color = patienceTimer > patienceTime * 0.5f ? Color.green : Color.red;
@@ -328,12 +288,9 @@ public class Customer : MonoBehaviour
         }
     }
     
-    // ===== INITIALIZATION =====
-    
     public void Initialize(CustomerSpawner customerSpawner, Transform counterPosition)
     {
         spawner = customerSpawner;
         targetPosition = counterPosition;
-        Debug.Log($"Customer initialized with spawner and counter position");
     }
 }

@@ -20,7 +20,6 @@ public class GameManager : MonoBehaviour
     
     private void Awake()
     {
-        // Singleton pattern
         if (Instance == null)
         {
             Instance = this;
@@ -49,9 +48,6 @@ public class GameManager : MonoBehaviour
         money += amount;
         customersServed++;
         
-        Debug.Log($"Earned ${amount}! Total money: ${money}");
-        
-        // Play money sound
         if (audioSource != null && moneyEarnedSound != null)
         {
             audioSource.PlayOneShot(moneyEarnedSound);
@@ -76,11 +72,6 @@ public class GameManager : MonoBehaviour
         {
             money -= amount;
             UpdateUI();
-            Debug.Log($"Spent ${amount}. Remaining: ${money}");
-        }
-        else
-        {
-            Debug.Log("Not enough money!");
         }
     }
     
@@ -107,7 +98,6 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // Game state management
     public void ResetGame()
     {
         money = 0;
@@ -120,7 +110,6 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("Money", money);
         PlayerPrefs.SetInt("CustomersServed", customersServed);
         PlayerPrefs.Save();
-        Debug.Log("Game saved!");
     }
     
     public void LoadGame()
@@ -128,10 +117,8 @@ public class GameManager : MonoBehaviour
         money = PlayerPrefs.GetInt("Money", 0);
         customersServed = PlayerPrefs.GetInt("CustomersServed", 0);
         UpdateUI();
-        Debug.Log("Game loaded!");
     }
     
-    // Statistics for end-game or achievements
     public float GetAverageEarningsPerCustomer()
     {
         return customersServed > 0 ? (float)money / customersServed : 0f;
