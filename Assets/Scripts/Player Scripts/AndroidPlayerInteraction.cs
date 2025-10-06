@@ -222,11 +222,11 @@ public class AndroidPlayerInteraction : MonoBehaviour
             interactionButton.gameObject.SetActive(true);
             isInteractionButtonVisible = true;
             
-            TextMeshProUGUI buttonText = interactionButton.GetComponentInChildren<TextMeshProUGUI>();
+          /*  TextMeshProUGUI buttonText = interactionButton.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
                 buttonText.text = text;
-            }
+            }*/
         }
         
         if (interactionPrompt != null && interactionText != null)
@@ -272,12 +272,12 @@ public class AndroidPlayerInteraction : MonoBehaviour
             {
                 interactionButton.interactable = canInteract;
                 
-                TextMeshProUGUI buttonText = interactionButton.GetComponentInChildren<TextMeshProUGUI>();
+                /*TextMeshProUGUI buttonText = interactionButton.GetComponentInChildren<TextMeshProUGUI>();
                 if (buttonText != null)
                 {
                     buttonText.text = text;
                     buttonText.color = canInteract ? Color.white : Color.gray;
-                }
+                }*/
             }
             
             if (interactionText != null)

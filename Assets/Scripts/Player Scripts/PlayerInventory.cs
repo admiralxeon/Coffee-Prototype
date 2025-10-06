@@ -134,6 +134,10 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         }
     }
     
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
     
     private void AddBeanToVisualStack()
     {

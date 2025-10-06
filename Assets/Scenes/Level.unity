@@ -1000,7 +1000,6 @@ MonoBehaviour:
   - Jordan
   - Casey
   - Taylor
-  enableDebugLogs: 1
   autoSpawn: 1
 --- !u!1 &645491129
 GameObject:
@@ -1069,7 +1068,7 @@ MonoBehaviour:
   tapRadius: 50
   interactionButton: {fileID: 1126341987}
   interactionPrompt: {fileID: 1780184531}
-  interactionText: {fileID: 1088774937}
+  interactionText: {fileID: 0}
   interactionHighlight: {fileID: 0}
   highlightPulseSpeed: 2
 --- !u!114 &720680060
@@ -1091,7 +1090,6 @@ MonoBehaviour:
   useFixedUpdate: 1
   smoothRotation: 1
   deadZone: 0.1
-  showDebugLogs: 0
   showGizmos: 1
 --- !u!1 &755100622
 GameObject:
@@ -1503,7 +1501,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Interact
+  m_text: E
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e79fa4ab445cb5e4c8a9d31f5b1997dd, type: 2}
   m_sharedMaterial: {fileID: -6064832767693604409, guid: e79fa4ab445cb5e4c8a9d31f5b1997dd, type: 2}
@@ -1530,7 +1528,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 41.3
+  m_fontSize: 72
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1618,8 +1616,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -181, y: 110}
-  m_SizeDelta: {x: 500, y: 50}
+  m_AnchoredPosition: {x: -169, y: 147}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1126341987
 MonoBehaviour:
@@ -1678,15 +1676,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 5bf484d4f957c4248a91e0b858daef91, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3221,7 +3219,6 @@ MonoBehaviour:
   sourceName: Coffee Bean Bag
   beanCollectSound: {fileID: 0}
   collectEffect: {fileID: 0}
-  enableDebugLogs: 1
 --- !u!4 &4564991600395123
 Transform:
   m_ObjectHideFlags: 0
@@ -3341,7 +3338,6 @@ MonoBehaviour:
   idleColor: {r: 1, g: 1, b: 1, a: 1}
   processingColor: {r: 1, g: 0, b: 0, a: 1}
   readyColor: {r: 0, g: 1, b: 0, a: 1}
-  enableDebugLogs: 0
 --- !u!4 &4865185297439699
 Transform:
   m_ObjectHideFlags: 0
