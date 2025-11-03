@@ -45,15 +45,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
       propertyPath: m_LocalPosition.x
@@ -292,10 +292,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2125037532046171649}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -369,14 +369,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7b28580693089c41be0029054e14083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waitTime: 15
-  orderCooldown: 2
-  customerName: Customer
-  moveSpeed: 3
-  targetPosition: {fileID: 0}
+  patienceTime: 30
+  paymentAmount: 10
   speechBubble: {fileID: 0}
-  customerRenderer: {fileID: 0}
-  waitingColor: {r: 1, g: 1, b: 1, a: 1}
-  happyColor: {r: 0, g: 1, b: 0, a: 1}
-  impatientColor: {r: 1, g: 0, b: 0, a: 1}
-  enableDebugLogs: 1
+  orderText: {fileID: 0}
+  orderSound: {fileID: 0}
+  thankYouSound: {fileID: 0}
+  impatientSound: {fileID: 0}
