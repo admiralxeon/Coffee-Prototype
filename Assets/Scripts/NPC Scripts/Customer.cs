@@ -130,9 +130,28 @@ public class Customer : MonoBehaviour
         }
 
         // Check if customer has reached the destination
-        if (agent.isOnNavMesh && !agent.pathPending && agent.hasPath && agent.remainingDistance < 1.5f)
+        // Also check if customer is close enough to counter even if path is blocked
+        if (agent.isOnNavMesh)
         {
-            StartWaitingForOrder();
+            bool hasReachedDestination = !agent.pathPending && agent.hasPath && agent.remainingDistance < 1.5f;
+
+            // Also check direct distance to counter if pathfinding is blocked
+            bool isCloseToCounter = false;
+            if (targetCounter != null && targetCounter.GetServingPoint() != null)
+            {
+                float distanceToCounter = Vector3.Distance(transform.position, targetCounter.GetServingPoint().position);
+                isCloseToCounter = distanceToCounter < 2.5f; // Slightly larger than pathfinding check
+            }
+            else if (targetPosition != null)
+            {
+                float distanceToCounter = Vector3.Distance(transform.position, targetPosition.position);
+                isCloseToCounter = distanceToCounter < 2.5f;
+            }
+
+            if (hasReachedDestination || isCloseToCounter)
+            {
+                StartWaitingForOrder();
+            }
         }
     }
 
@@ -248,20 +267,65 @@ public class Customer : MonoBehaviour
 
     private void StartWaitingForOrder()
     {
+        // Only transition if we're not already waiting or received order
+        if (currentState == CustomerState.WaitingForOrder || currentState == CustomerState.OrderReceived)
+        {
+            return;
+        }
+
         currentState = CustomerState.WaitingForOrder;
-        agent.isStopped = true;
+        if (agent != null)
+        {
+            agent.isStopped = true;
+        }
         ShowOrder();
         PlaySound(orderSound);
+        Debug.Log($"Customer {name} is now waiting for order at position {transform.position}");
     }
 
     public void ReceiveOrder()
     {
-        if (currentState != CustomerState.WaitingForOrder)
+        // If already waiting, proceed directly
+        if (currentState == CustomerState.WaitingForOrder)
         {
-            Debug.LogWarning($"Customer {name} cannot receive order - current state is {currentState}, expected {CustomerState.WaitingForOrder}");
+            // Proceed to serve
+        }
+        // If moving to counter, check if close enough and transition
+        else if (currentState == CustomerState.MovingToCounter)
+        {
+            float distanceToCounter = GetDistanceToCounter();
+
+            // Use 4.0f to be more lenient - if ServingCounter detected them, they should be served
+            if (distanceToCounter <= 4.0f)
+            {
+                Debug.Log($"Customer {name} is close enough to counter ({distanceToCounter:F2} units) but in {currentState} state. Transitioning to WaitingForOrder to receive order.");
+                // Force transition to waiting state
+                currentState = CustomerState.WaitingForOrder;
+                if (agent != null)
+                {
+                    agent.isStopped = true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Customer {name} cannot receive order - in {currentState} state and too far ({distanceToCounter:F2} units). Expected <= 4.0f. This shouldn't happen if ServingCounter detected them correctly.");
+                return;
+            }
+        }
+        // If already received order or leaving, don't serve again
+        else if (currentState == CustomerState.OrderReceived || currentState == CustomerState.Leaving)
+        {
+            Debug.LogWarning($"Customer {name} cannot receive order - already in {currentState} state.");
+            return;
+        }
+        // Any other state is invalid
+        else
+        {
+            Debug.LogWarning($"Customer {name} cannot receive order - invalid state: {currentState}");
             return;
         }
 
+        // If we reach here, the customer can receive the order
         currentState = CustomerState.OrderReceived;
         ShowThankYou();
         PlaySound(thankYouSound);
@@ -279,6 +343,19 @@ public class Customer : MonoBehaviour
 
         OnCustomerServed?.Invoke(this);
         StartCoroutine(DelayedLeaving());
+    }
+
+    private float GetDistanceToCounter()
+    {
+        if (targetCounter != null && targetCounter.GetServingPoint() != null)
+        {
+            return Vector3.Distance(transform.position, targetCounter.GetServingPoint().position);
+        }
+        else if (targetPosition != null)
+        {
+            return Vector3.Distance(transform.position, targetPosition.position);
+        }
+        return float.MaxValue;
     }
 
     private IEnumerator DelayedLeaving()

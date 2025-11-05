@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class CustomerSpawner : MonoBehaviour
 {
     [Header("Spawning Settings")]
-    [SerializeField] private GameObject customerPrefab;
+    [SerializeField] private GameObject[] customerPrefabs;
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform counterPosition;
     [SerializeField] private float spawnInterval = 10f;
@@ -77,8 +77,10 @@ public class CustomerSpawner : MonoBehaviour
 
     public void SpawnCustomer()
     {
-        if (customerPrefab == null)
+        GameObject prefabToSpawn = GetRandomCustomerPrefab();
+        if (prefabToSpawn == null)
         {
+            Debug.LogWarning("CustomerSpawner: No customer prefabs assigned!");
             return;
         }
 
@@ -87,7 +89,7 @@ public class CustomerSpawner : MonoBehaviour
             return;
         }
 
-        GameObject customerObj = Instantiate(customerPrefab, spawnPoint.position, spawnPoint.rotation);
+        GameObject customerObj = Instantiate(prefabToSpawn, spawnPoint.position, spawnPoint.rotation);
         Customer customer = customerObj.GetComponent<Customer>();
 
         if (customer == null)
@@ -146,6 +148,28 @@ public class CustomerSpawner : MonoBehaviour
         OnCustomerDestroyed(customer);
     }
 
+
+    private GameObject GetRandomCustomerPrefab()
+    {
+        if (customerPrefabs == null || customerPrefabs.Length == 0)
+            return null;
+
+        // Filter out null prefabs
+        List<GameObject> validPrefabs = new List<GameObject>();
+        foreach (GameObject prefab in customerPrefabs)
+        {
+            if (prefab != null)
+            {
+                validPrefabs.Add(prefab);
+            }
+        }
+
+        if (validPrefabs.Count == 0)
+            return null;
+
+        int randomIndex = Random.Range(0, validPrefabs.Count);
+        return validPrefabs[randomIndex];
+    }
 
     private string GetRandomCustomerName()
     {

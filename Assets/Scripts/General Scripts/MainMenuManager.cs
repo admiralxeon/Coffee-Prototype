@@ -8,7 +8,6 @@ public class MainMenuManager : MonoBehaviour
     [Header("Menu UI Elements")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private Button playButton;
-    [SerializeField] private Button quitButton;
 
     [Header("Scene Management")]
     [SerializeField] private string gameSceneName = "GameScene";
@@ -23,22 +22,10 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private CanvasGroup fadePanel;
     [SerializeField] private float fadeSpeed = 2f;
 
-    [Header("Quit Confirmation")]
-    [SerializeField] private GameObject quitConfirmationPanel;
-    [SerializeField] private Button confirmQuitButton;
-    [SerializeField] private Button cancelQuitButton;
-
-    private bool isQuitting = false;
-
     private void Start()
     {
         InitializeMenu();
         SetupButtonListeners();
-    }
-
-    private void Update()
-    {
-        HandleEscapeKey();
     }
 
     private void InitializeMenu()
@@ -54,11 +41,6 @@ public class MainMenuManager : MonoBehaviour
             mainMenuPanel.SetActive(true);
         }
 
-        if (quitConfirmationPanel != null)
-        {
-            quitConfirmationPanel.SetActive(false);
-        }
-
         if (fadePanel != null)
         {
             fadePanel.alpha = 0f;
@@ -72,95 +54,15 @@ public class MainMenuManager : MonoBehaviour
         {
             playButton.onClick.AddListener(OnPlayButtonClicked);
         }
-
-        if (quitButton != null)
-        {
-            quitButton.onClick.AddListener(OnQuitButtonClicked);
-        }
-
-        if (confirmQuitButton != null)
-        {
-            confirmQuitButton.onClick.AddListener(OnConfirmQuit);
-        }
-
-        if (cancelQuitButton != null)
-        {
-            cancelQuitButton.onClick.AddListener(OnCancelQuit);
-        }
-    }
-
-    private void HandleEscapeKey()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (quitConfirmationPanel != null && quitConfirmationPanel.activeInHierarchy)
-            {
-                OnCancelQuit();
-            }
-            else
-            {
-                OnQuitButtonClicked();
-            }
-        }
     }
 
     #region Button Click Handlers
 
     public void OnPlayButtonClicked()
     {
-        if (isQuitting) return;
-
+        Debug.Log("Play button clicked!");
         PlayClickSound();
         StartCoroutine(LoadGameScene());
-    }
-
-    public void OnQuitButtonClicked()
-    {
-        PlayClickSound();
-
-        if (quitConfirmationPanel != null)
-        {
-            quitConfirmationPanel.SetActive(true);
-            mainMenuPanel.SetActive(false);
-        }
-        else
-        {
-            StartCoroutine(QuitApplication());
-        }
-    }
-
-    public void OnConfirmQuit()
-    {
-        PlayClickSound();
-        StartCoroutine(QuitApplication());
-        Invoke("ForceQuit", 2f);
-    }
-
-    private void ForceQuit()
-    {
-        if (isQuitting)
-        {
-#if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
-    }
-
-    public void OnCancelQuit()
-    {
-        PlayClickSound();
-
-        if (quitConfirmationPanel != null)
-        {
-            quitConfirmationPanel.SetActive(false);
-        }
-
-        if (mainMenuPanel != null)
-        {
-            mainMenuPanel.SetActive(true);
-        }
     }
 
     #endregion
@@ -170,24 +72,65 @@ public class MainMenuManager : MonoBehaviour
     private IEnumerator LoadGameScene()
     {
         SetButtonsInteractable(false);
+
+        // Validate scene exists before attempting to load
+        if (!DoesSceneExist(gameSceneName))
+        {
+            Debug.LogError($"Scene '{gameSceneName}' not found in build settings! Please add the scene to File > Build Settings > Scenes In Build.\n{GetAvailableScenesList()}");
+            SetButtonsInteractable(true); // Re-enable buttons so user can try again
+            yield break;
+        }
+
+        Debug.Log($"Loading scene: {gameSceneName}");
         yield return StartCoroutine(FadeOut());
         yield return new WaitForSeconds(sceneTransitionDelay);
-        SceneManager.LoadScene(gameSceneName);
+
+        try
+        {
+            SceneManager.LoadScene(gameSceneName);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to load scene '{gameSceneName}': {e.Message}");
+            SetButtonsInteractable(true);
+        }
     }
 
-    private IEnumerator QuitApplication()
+    private bool DoesSceneExist(string sceneName)
     {
-        isQuitting = true;
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            return false;
+        }
 
-        SetButtonsInteractable(false);
-        yield return StartCoroutine(FadeOut());
-        yield return new WaitForSeconds(sceneTransitionDelay);
+        // Check if scene exists in build settings
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+            string sceneNameFromPath = System.IO.Path.GetFileNameWithoutExtension(scenePath);
 
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+            if (sceneNameFromPath == sceneName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private string GetAvailableScenesList()
+    {
+        System.Text.StringBuilder sceneList = new System.Text.StringBuilder();
+        sceneList.Append("Available scenes in build settings:\n");
+
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+            string sceneNameFromPath = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+            sceneList.Append($"  - {sceneNameFromPath}\n");
+        }
+
+        return sceneList.ToString();
     }
 
     #endregion
@@ -262,9 +205,6 @@ public class MainMenuManager : MonoBehaviour
     private void SetButtonsInteractable(bool interactable)
     {
         if (playButton != null) playButton.interactable = interactable;
-        if (quitButton != null) quitButton.interactable = interactable;
-        if (confirmQuitButton != null) confirmQuitButton.interactable = interactable;
-        if (cancelQuitButton != null) cancelQuitButton.interactable = interactable;
     }
 
     #endregion
@@ -273,34 +213,44 @@ public class MainMenuManager : MonoBehaviour
 
     public void LoadScene(string sceneName)
     {
-        if (!isQuitting)
-        {
-            StartCoroutine(LoadSceneWithFade(sceneName));
-        }
+        StartCoroutine(LoadSceneWithFade(sceneName));
     }
 
     private IEnumerator LoadSceneWithFade(string sceneName)
     {
         SetButtonsInteractable(false);
+
+        // Validate scene exists before attempting to load
+        if (!DoesSceneExist(sceneName))
+        {
+            Debug.LogError($"Scene '{sceneName}' not found in build settings! Please add the scene to File > Build Settings > Scenes In Build.\n{GetAvailableScenesList()}");
+            SetButtonsInteractable(true);
+            yield break;
+        }
+
+        Debug.Log($"Loading scene: {sceneName}");
         yield return StartCoroutine(FadeOut());
         yield return new WaitForSeconds(sceneTransitionDelay);
-        SceneManager.LoadScene(sceneName);
+
+        try
+        {
+            SceneManager.LoadScene(sceneName);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to load scene '{sceneName}': {e.Message}");
+            SetButtonsInteractable(true);
+        }
     }
 
     public void RestartGame()
     {
-        if (!isQuitting)
-        {
-            StartCoroutine(LoadSceneWithFade(gameSceneName));
-        }
+        StartCoroutine(LoadSceneWithFade(gameSceneName));
     }
 
     public void ReturnToMainMenu()
     {
-        if (!isQuitting)
-        {
-            StartCoroutine(LoadSceneWithFade("MainMenu"));
-        }
+        StartCoroutine(LoadSceneWithFade("MainMenu"));
     }
 
     #endregion
