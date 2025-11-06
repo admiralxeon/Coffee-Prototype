@@ -1,371 +1,317 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class CoffeeMachine : MonoBehaviour, IInteractable
 {
-    [Header("Coffee Machine Settings")]
+    [Header("Processing Settings")]
     [SerializeField] private float processingTime = 3f;
-    [SerializeField] private int beansPerCoffee = 1;
-    [SerializeField] private string machineName = "Coffee Machine";
-
-    [Header("Coffee Cup Settings")]
+    [SerializeField] private int beansRequired = 3;
+    
+    [Header("Coffee Cup")]
     [SerializeField] private GameObject coffeeCupPrefab;
     [SerializeField] private Transform cupSpawnPoint;
-    [SerializeField] private int maxCupsOnMachine = 3;
-
-    [Header("Processing Effects")]
-    [SerializeField] private GameObject processingEffect;
-    [SerializeField] private AudioClip processingSound;
-    [SerializeField] private AudioClip completionSound;
-    [SerializeField] private ParticleSystem steamEffect;
-
+    
     [Header("Visual Feedback")]
-    [SerializeField] private Renderer machineRenderer;
-    [SerializeField] private Color idleColor = Color.white;
-    [SerializeField] private Color processingColor = Color.red;
+    [SerializeField] private ProgressFeedbackUI progressFeedback;
+    [SerializeField] private ParticleSystem steamEffect;
+    [SerializeField] private Light machineLight;
+    
+    [Header("Colors")]
+    [SerializeField] private Color idleColor = Color.gray;
+    [SerializeField] private Color processingColor = Color.yellow;
     [SerializeField] private Color readyColor = Color.green;
-
-
-    // Machine state
+    
+    [Header("Audio")]
+    [SerializeField] private AudioClip brewingSound;
+    [SerializeField] private AudioClip completeSound;
+    
     private bool isProcessing = false;
     private bool hasCoffeeReady = false;
-    private float processingStartTime;
-    private PlayerInventory playerInventory;
+    private GameObject currentCoffeeCup;
     private AudioSource audioSource;
-
-    // Coffee cups on machine
-    private System.Collections.Generic.List<GameObject> cupsOnMachine = new System.Collections.Generic.List<GameObject>();
-
-    /// <summary>
-    /// Gets all coffee cups currently on this machine
-    /// </summary>
-    public System.Collections.Generic.List<GameObject> GetCupsOnMachine()
-    {
-        return cupsOnMachine;
-    }
-
-    /// <summary>
-    /// Checks if this machine has coffee ready
-    /// </summary>
-    public bool HasCoffeeReady()
-    {
-        return hasCoffeeReady && cupsOnMachine.Count > 0;
-    }
-
+    private Renderer machineRenderer;
+    
     private void Start()
     {
-        SetupMachine();
-        SetMachineColor(idleColor);
+        InitializeComponents();
+        UpdateVisualState();
     }
-
-    private void SetupMachine()
+    
+    private void InitializeComponents()
     {
+        // Audio setup
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.spatialBlend = 1f;
-            audioSource.playOnAwake = false;
         }
-
-        if (cupSpawnPoint == null)
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f;
+        
+        // Renderer for color changes
+        machineRenderer = GetComponentInChildren<Renderer>();
+        
+        // Progress feedback setup
+        if (progressFeedback == null)
         {
-            GameObject spawnPoint = new GameObject("CupSpawnPoint");
-            spawnPoint.transform.SetParent(transform);
-            spawnPoint.transform.localPosition = Vector3.up * 1.2f;
-            cupSpawnPoint = spawnPoint.transform;
-        }
-
-        if (machineRenderer == null)
-        {
-            machineRenderer = GetComponent<Renderer>();
-        }
-
-    }
-
-    private void Update()
-    {
-        UpdateProcessing();
-    }
-
-
-    private void UpdateProcessing()
-    {
-        if (isProcessing)
-        {
-            float elapsed = Time.time - processingStartTime;
-            if (elapsed >= processingTime)
+            progressFeedback = FindObjectOfType<ProgressFeedbackUI>();
+            if (progressFeedback == null)
             {
-                CompleteProcessing();
+                Debug.LogWarning("ProgressFeedbackUI not found in scene!");
             }
         }
+        
+        Debug.Log($"Coffee Machine initialized - Processing time: {processingTime}s");
     }
-
-    private void StartProcessing()
-    {
-        if (isProcessing || hasCoffeeReady)
-            return;
-
-        isProcessing = true;
-        processingStartTime = Time.time;
-
-        SetMachineColor(processingColor);
-        PlayProcessingEffects();
-    }
-
-    private void CompleteProcessing()
-    {
-        isProcessing = false;
-        hasCoffeeReady = true;
-
-        SpawnCoffeeCup();
-        SetMachineColor(readyColor);
-        PlayCompletionEffects();
-    }
-
-    private void SpawnCoffeeCup()
-    {
-        if (coffeeCupPrefab == null)
-        {
-            return;
-        }
-
-        if (cupsOnMachine.Count >= maxCupsOnMachine)
-        {
-            return;
-        }
-
-        Vector3 spawnPosition = cupSpawnPoint.position;
-        spawnPosition += Vector3.up * 0.1f;
-
-        if (cupsOnMachine.Count > 0)
-        {
-            float offset = cupsOnMachine.Count * 0.3f;
-            spawnPosition += Vector3.right * offset;
-        }
-
-        GameObject newCup = Instantiate(coffeeCupPrefab, spawnPosition, cupSpawnPoint.rotation);
-
-        // Ensure cup is on the correct layer for interaction detection
-        // Use the same layer as the machine (or default if machine is on default layer)
-        newCup.layer = gameObject.layer;
-
-        CoffeeCup cupComponent = newCup.GetComponent<CoffeeCup>();
-        if (cupComponent == null)
-        {
-            cupComponent = newCup.AddComponent<CoffeeCup>();
-        }
-        cupComponent.Initialize(this);
-
-        cupsOnMachine.Add(newCup);
-    }
-
+    
     public string GetInteractionText()
     {
-        if (playerInventory == null)
-        {
-            PlayerInventory[] inventories = FindObjectsOfType<PlayerInventory>();
-            if (inventories.Length > 0)
-            {
-                playerInventory = inventories[0];
-            }
-        }
-
-        if (playerInventory == null)
-            return "Press E to use machine";
-
-        if (isProcessing)
-        {
-            float elapsed = Time.time - processingStartTime;
-            float remaining = processingTime - elapsed;
-            return $"Processing... ({remaining:F1}s)";
-        }
-
         if (hasCoffeeReady)
         {
-            return "Coffee Ready! Pick up the cup";
+            return "Collect Coffee";
         }
-
-        int playerBeans = playerInventory.GetItemCount(ItemType.CoffeeBean);
-        if (playerBeans < beansPerCoffee)
+        else if (isProcessing)
         {
-            return $"Need {beansPerCoffee} beans (have {playerBeans})";
+            return "Processing...";
         }
-
-        if (cupsOnMachine.Count >= maxCupsOnMachine)
+        else
         {
-            return "Machine full - collect cups first";
+            var player = GetPlayerInventory();
+            if (player != null && player.GetItemCount(ItemType.CoffeeBean) >= beansRequired)
+            {
+                return "Make Coffee";
+            }
+            else
+            {
+                return $"Need {beansRequired} beans";
+            }
         }
-
-        return $"Press E - Make Coffee ({beansPerCoffee} bean)";
     }
-
+    
     public bool CanInteract()
     {
-        if (playerInventory == null)
-        {
-            PlayerInventory[] inventories = FindObjectsOfType<PlayerInventory>();
-            if (inventories.Length > 0)
-            {
-                playerInventory = inventories[0];
-            }
-        }
-
-        if (playerInventory == null)
-            return false;
-
-        // Don't allow machine interaction when coffee is ready - player must pick up the cup directly
-        if (hasCoffeeReady)
-            return false;
-
-        if (isProcessing)
-            return false;
-
-        if (cupsOnMachine.Count >= maxCupsOnMachine)
-            return false;
-        return playerInventory.GetItemCount(ItemType.CoffeeBean) >= beansPerCoffee;
+        if (hasCoffeeReady) return true;
+        if (isProcessing) return false;
+        
+        var player = GetPlayerInventory();
+        return player != null && player.GetItemCount(ItemType.CoffeeBean) >= beansRequired;
     }
-
+    
     public void OnInteract()
     {
-        if (!CanInteract())
-            return;
-
-        if (playerInventory == null)
-            return;
-
-        // Coffee cups should be picked up directly, not through machine interaction
         if (hasCoffeeReady)
         {
+            CollectCoffee();
+        }
+        else if (!isProcessing)
+        {
+            StartCoffeeProduction();
+        }
+    }
+    
+    private void StartCoffeeProduction()
+    {
+        var player = GetPlayerInventory();
+        if (player == null || player.GetItemCount(ItemType.CoffeeBean) < beansRequired) 
             return;
-        }
-
-        if (playerInventory.GetItemCount(ItemType.CoffeeBean) >= beansPerCoffee)
+        
+        // Remove beans from player
+        for (int i = 0; i < beansRequired; i++)
         {
-            for (int i = 0; i < beansPerCoffee; i++)
-            {
-                playerInventory.TryRemoveItem(ItemType.CoffeeBean);
-            }
-
-            StartProcessing();
+            player.TryRemoveItem(ItemType.CoffeeBean);
         }
-    }
-
-    private void CollectCoffee()
-    {
-        if (!hasCoffeeReady || cupsOnMachine.Count == 0)
-            return;
-
-        if (playerInventory.TryAddItem(ItemType.CoffeeCup))
+        
+        isProcessing = true;
+        UpdateVisualState();
+        
+        // Show progress bar
+        if (progressFeedback != null)
         {
-            GameObject cupToRemove = cupsOnMachine[cupsOnMachine.Count - 1];
-            cupsOnMachine.RemoveAt(cupsOnMachine.Count - 1);
-            Destroy(cupToRemove);
-
-            hasCoffeeReady = cupsOnMachine.Count > 0;
-            if (!hasCoffeeReady)
-            {
-                SetMachineColor(idleColor);
-            }
+            progressFeedback.ShowProgress(transform, processingTime, "Brewing...");
         }
-    }
-
-
-    private void SetMachineColor(Color color)
-    {
-        if (machineRenderer != null)
-        {
-            machineRenderer.material.color = color;
-        }
-    }
-
-    private void PlayProcessingEffects()
-    {
-        if (audioSource != null && processingSound != null)
-        {
-            audioSource.clip = processingSound;
-            audioSource.loop = true;
-            audioSource.Play();
-        }
-
+        
+        // Start particle effects
         if (steamEffect != null)
         {
             steamEffect.Play();
         }
-
-        if (processingEffect != null)
+        
+        // Play brewing sound (looped)
+        if (audioSource != null && brewingSound != null)
         {
-            GameObject effect = Instantiate(processingEffect, transform.position + Vector3.up, Quaternion.identity);
-            Destroy(effect, processingTime);
+            audioSource.clip = brewingSound;
+            audioSource.loop = true;
+            audioSource.Play();
         }
+        
+        Debug.Log($"Coffee production started - {processingTime}s remaining");
+        StartCoroutine(ProcessCoffee());
     }
-
-    private void PlayCompletionEffects()
+    
+    private IEnumerator ProcessCoffee()
     {
+        yield return new WaitForSeconds(processingTime);
+        
+        // Stop processing effects
         if (audioSource != null)
         {
             audioSource.Stop();
+            audioSource.loop = false;
         }
-
-        if (audioSource != null && completionSound != null)
-        {
-            audioSource.PlayOneShot(completionSound);
-        }
-
+        
         if (steamEffect != null)
         {
             steamEffect.Stop();
         }
+        
+        // Play completion sound
+        if (audioSource != null && completeSound != null)
+        {
+            audioSource.PlayOneShot(completeSound);
+        }
+        
+        // Spawn coffee cup
+        SpawnCoffeeCup();
+        
+        isProcessing = false;
+        hasCoffeeReady = true;
+        UpdateVisualState();
+        
+        Debug.Log("Coffee ready for collection!");
     }
-
-
+    
+    private void SpawnCoffeeCup()
+    {
+        if (coffeeCupPrefab == null || cupSpawnPoint == null) 
+        {
+            Debug.LogWarning("Coffee cup prefab or spawn point not set!");
+            return;
+        }
+        
+        currentCoffeeCup = Instantiate(coffeeCupPrefab, cupSpawnPoint.position, cupSpawnPoint.rotation);
+        
+        // Initialize the cup
+        CoffeeCup cupScript = currentCoffeeCup.GetComponent<CoffeeCup>();
+        if (cupScript != null)
+        {
+            cupScript.Initialize(this);
+        }
+        
+        // Add a little pop-in animation
+        StartCoroutine(AnimateCupSpawn(currentCoffeeCup));
+    }
+    
+    private IEnumerator AnimateCupSpawn(GameObject cup)
+    {
+        if (cup == null) yield break;
+        
+        Vector3 originalScale = cup.transform.localScale;
+        cup.transform.localScale = Vector3.zero;
+        
+        float duration = 0.3f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // Elastic ease out
+            float scale = Mathf.Sin(t * Mathf.PI * 0.5f);
+            cup.transform.localScale = originalScale * scale;
+            yield return null;
+        }
+        
+        cup.transform.localScale = originalScale;
+    }
+    
+    private void CollectCoffee()
+    {
+        var player = GetPlayerInventory();
+        if (player == null) return;
+        
+        if (player.TryAddItem(ItemType.CoffeeCup))
+        {
+            // Remove the cup GameObject
+            if (currentCoffeeCup != null)
+            {
+                Destroy(currentCoffeeCup);
+                currentCoffeeCup = null;
+            }
+            
+            hasCoffeeReady = false;
+            UpdateVisualState();
+            
+            Debug.Log("Coffee collected!");
+        }
+    }
+    
     public void RemoveCupFromMachine(GameObject cup)
     {
-        if (cupsOnMachine.Contains(cup))
+        if (cup == currentCoffeeCup)
         {
-            cupsOnMachine.Remove(cup);
-
-            if (cupsOnMachine.Count == 0)
-            {
-                hasCoffeeReady = false;
-                SetMachineColor(idleColor);
-            }
+            currentCoffeeCup = null;
+            hasCoffeeReady = false;
+            UpdateVisualState();
         }
     }
-
-
-
-    [ContextMenu("Start Test Processing")]
-    private void StartTestProcessing()
+    
+    private void UpdateVisualState()
     {
-        if (!isProcessing && !hasCoffeeReady)
+        // Update machine color
+        Color targetColor = idleColor;
+        
+        if (hasCoffeeReady)
         {
-            StartProcessing();
+            targetColor = readyColor;
+        }
+        else if (isProcessing)
+        {
+            targetColor = processingColor;
+        }
+        
+        if (machineRenderer != null)
+        {
+            machineRenderer.material.color = targetColor;
+        }
+        
+        // Update machine light
+        if (machineLight != null)
+        {
+            machineLight.color = targetColor;
+            machineLight.intensity = (hasCoffeeReady || isProcessing) ? 2f : 0.5f;
         }
     }
-
-    [ContextMenu("Complete Processing")]
-    private void ForceCompleteProcessing()
+    
+    private PlayerInventory GetPlayerInventory()
     {
-        if (isProcessing)
-        {
-            CompleteProcessing();
-        }
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        return player?.GetComponent<PlayerInventory>();
     }
-
-
-    private void OnDrawGizmos()
+    
+    // Public getters
+    public bool IsProcessing() => isProcessing;
+    public bool HasCoffeeReady() => hasCoffeeReady;
+    public float GetProcessingTime() => processingTime;
+    
+    public  List<GameObject> GetCupsOnMachine()
     {
-        Color gizmoColor = Color.white;
-        if (isProcessing) gizmoColor = Color.red;
-        else if (hasCoffeeReady) gizmoColor = Color.green;
-
-        Gizmos.color = gizmoColor;
-        Gizmos.DrawWireCube(transform.position + Vector3.up * 0.5f, Vector3.one * 0.4f);
-
+        var cups = new List<GameObject>();
+        if (currentCoffeeCup != null)
+        {
+            cups.Add(currentCoffeeCup);
+        }
+        return cups;
+    }
+    
+    private void OnDrawGizmosSelected()
+    {
+        // Visualize spawn point
         if (cupSpawnPoint != null)
         {
             Gizmos.color = Color.cyan;
             Gizmos.DrawWireSphere(cupSpawnPoint.position, 0.1f);
+            Gizmos.DrawLine(transform.position, cupSpawnPoint.position);
         }
     }
 }
