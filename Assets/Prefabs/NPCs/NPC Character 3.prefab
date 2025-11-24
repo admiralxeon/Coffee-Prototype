@@ -276,6 +276,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2049131520561737724}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7759200383725429937}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -1082018630542788903}
   m_SourcePrefab: {fileID: 100100000, guid: 664e6998ef92f4f468a6439ccee9e128, type: 3}
 --- !u!4 &5063125112621845544 stripped
 Transform:
@@ -337,3 +343,44 @@ CapsuleCollider:
   m_Height: 3.5532603
   m_Direction: 1
   m_Center: {x: 0, y: 1.6207857, z: 0.09871982}
+--- !u!114 &-7759200383725429937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5550692975763199634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b28580693089c41be0029054e14083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  patienceTime: 30
+  paymentAmount: 10
+  speechBubble: {fileID: 0}
+  orderText: {fileID: 0}
+  orderSound: {fileID: 0}
+  thankYouSound: {fileID: 0}
+  impatientSound: {fileID: 0}
+--- !u!195 &-1082018630542788903
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5550692975763199634}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 1
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4

@@ -25,6 +25,8 @@ public class Customer : MonoBehaviour
     private ServingCounter targetCounter;
     private CustomerSpawner spawner;
     private Transform targetPosition;
+    private CustomerOrderData orderData;
+    private float orderStartTime;
 
     // Events
     public System.Action<Customer> OnCustomerServed;
@@ -62,6 +64,11 @@ public class Customer : MonoBehaviour
     {
         // Ensure destination is set once agent is on NavMesh
         StartCoroutine(WaitForNavMeshAndSetDestination());
+        orderData = CustomerOrderData.GenerateRandomOrder();
+        patienceTime = orderData.GetPatienceTime(patienceTime);
+        paymentAmount = orderData.GetFinalPayment();
+        orderStartTime = Time.time;
+
     }
 
     private void Update()
@@ -283,8 +290,13 @@ public class Customer : MonoBehaviour
         Debug.Log($"Customer {name} is now waiting for order at position {transform.position}");
     }
 
-    public void ReceiveOrder()
+    public bool ReceiveOrder()
     {
+        float serveTime = Time.time - orderStartTime;
+        if (GameStatistics.Instance != null)
+        {
+            GameStatistics.Instance.RecordCustomerServed(paymentAmount, serveTime);
+        }
         // If already waiting, proceed directly
         if (currentState == CustomerState.WaitingForOrder)
         {
@@ -309,20 +321,20 @@ public class Customer : MonoBehaviour
             else
             {
                 Debug.LogWarning($"Customer {name} cannot receive order - in {currentState} state and too far ({distanceToCounter:F2} units). Expected <= 4.0f. This shouldn't happen if ServingCounter detected them correctly.");
-                return;
+                return false;
             }
         }
         // If already received order or leaving, don't serve again
         else if (currentState == CustomerState.OrderReceived || currentState == CustomerState.Leaving)
         {
             Debug.LogWarning($"Customer {name} cannot receive order - already in {currentState} state.");
-            return;
+            return false;
         }
         // Any other state is invalid
         else
         {
             Debug.LogWarning($"Customer {name} cannot receive order - invalid state: {currentState}");
-            return;
+            return false;
         }
 
         // If we reach here, the customer can receive the order
@@ -343,6 +355,7 @@ public class Customer : MonoBehaviour
 
         OnCustomerServed?.Invoke(this);
         StartCoroutine(DelayedLeaving());
+        return true;
     }
 
     private float GetDistanceToCounter()

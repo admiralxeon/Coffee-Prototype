@@ -91,11 +91,16 @@ public class CoffeeMachine : MonoBehaviour, IInteractable
     
     public bool CanInteract()
     {
-        if (hasCoffeeReady) return true;
+        if (hasCoffeeReady)
+        {
+            // Check if player can actually carry the coffee cup
+            var player = GetPlayerInventory();
+            return player != null && player.CanCarryItem(ItemType.CoffeeCup);
+        }
         if (isProcessing) return false;
         
-        var player = GetPlayerInventory();
-        return player != null && player.GetItemCount(ItemType.CoffeeBean) >= beansRequired;
+        var playerInventory = GetPlayerInventory();
+        return playerInventory != null && playerInventory.GetItemCount(ItemType.CoffeeBean) >= beansRequired;
     }
     
     public void OnInteract()
@@ -151,7 +156,12 @@ public class CoffeeMachine : MonoBehaviour, IInteractable
     
     private IEnumerator ProcessCoffee()
     {
-        yield return new WaitForSeconds(processingTime);
+        float actualProcessingTime = processingTime;
+        if (UpgradeSystem.Instance != null)
+        {
+            actualProcessingTime *= UpgradeSystem.Instance.GetMachineSpeedMultiplier();
+        }
+        yield return new WaitForSeconds(actualProcessingTime);
         
         // Stop processing effects
         if (audioSource != null)
@@ -230,6 +240,13 @@ public class CoffeeMachine : MonoBehaviour, IInteractable
         var player = GetPlayerInventory();
         if (player == null) return;
         
+        // Double-check that player can carry the item before attempting to add
+        if (!player.CanCarryItem(ItemType.CoffeeCup))
+        {
+            Debug.LogWarning("Cannot collect coffee - inventory full!");
+            return;
+        }
+        
         if (player.TryAddItem(ItemType.CoffeeCup))
         {
             // Remove the cup GameObject
@@ -243,6 +260,10 @@ public class CoffeeMachine : MonoBehaviour, IInteractable
             UpdateVisualState();
             
             Debug.Log("Coffee collected!");
+        }
+        else
+        {
+            Debug.LogWarning("Failed to add coffee cup to inventory!");
         }
     }
     

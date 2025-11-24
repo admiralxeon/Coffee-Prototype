@@ -13,6 +13,16 @@ public class ServingCounter : MonoBehaviour, IInteractable
     [SerializeField] private ParticleSystem servingEffect;
 
     private AudioSource audioSource;
+    private PlayerInventory cachedPlayerInventory;
+
+    private PlayerInventory GetPlayerInventory()
+    {
+        if (cachedPlayerInventory == null)
+        {
+            cachedPlayerInventory = FindObjectOfType<PlayerInventory>();
+        }
+        return cachedPlayerInventory;
+    }
 
     private void Start()
     {
@@ -34,7 +44,7 @@ public class ServingCounter : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
-        var player = FindObjectOfType<PlayerInventory>();
+        var player = GetPlayerInventory();
         if (player != null && player.GetItemCount(ItemType.CoffeeCup) > 0)
         {
             Customer waitingCustomer = FindWaitingCustomer();
@@ -52,7 +62,7 @@ public class ServingCounter : MonoBehaviour, IInteractable
 
     public bool CanInteract()
     {
-        var inventory = FindObjectOfType<PlayerInventory>();
+        var inventory = GetPlayerInventory();
         if (inventory == null)
         {
             return false;
@@ -83,7 +93,7 @@ public class ServingCounter : MonoBehaviour, IInteractable
 
     public void OnInteract()
     {
-        var inventory = FindObjectOfType<PlayerInventory>();
+        var inventory = GetPlayerInventory();
         if (inventory == null)
         {
             Debug.LogWarning("ServingCounter: PlayerInventory not found!");
@@ -101,19 +111,27 @@ public class ServingCounter : MonoBehaviour, IInteractable
         if (waitingCustomer != null)
         {
             Debug.Log($"ServingCounter: Found waiting customer {waitingCustomer.name}. Serving coffee...");
-            // Serve coffee to waiting customer
-            bool coffeeRemoved = inventory.TryRemoveItem(ItemType.CoffeeCup);
-            if (coffeeRemoved)
+            // Try to serve coffee to waiting customer - only remove coffee if customer accepts it
+            bool orderReceived = waitingCustomer.ReceiveOrder();
+            if (orderReceived)
             {
-                Debug.Log($"ServingCounter: Coffee removed from inventory. Remaining cups: {inventory.GetItemCount(ItemType.CoffeeCup)}");
-                // Don't add money here - the customer's ReceiveOrder() method will handle it via GameManager
-                // This prevents double money rewards
-                waitingCustomer.ReceiveOrder();
-                PlayServingEffects();
+                // Customer successfully received order, now remove coffee from inventory
+                bool coffeeRemoved = inventory.TryRemoveItem(ItemType.CoffeeCup);
+                if (coffeeRemoved)
+                {
+                    Debug.Log($"ServingCounter: Coffee removed from inventory. Remaining cups: {inventory.GetItemCount(ItemType.CoffeeCup)}");
+                    // Don't add money here - the customer's ReceiveOrder() method will handle it via GameManager
+                    // This prevents double money rewards
+                    PlayServingEffects();
+                }
+                else
+                {
+                    Debug.LogError("ServingCounter: Customer received order but failed to remove coffee from inventory!");
+                }
             }
             else
             {
-                Debug.LogError("ServingCounter: Failed to remove coffee from inventory!");
+                Debug.LogWarning("ServingCounter: Customer could not receive order (wrong state or too far). Coffee not removed.");
             }
         }
         // This should never happen if CanInteract() is working correctly
@@ -332,7 +350,7 @@ public class ServingCounter : MonoBehaviour, IInteractable
     [ContextMenu("Debug Current State")]
     private void DebugCurrentState()
     {
-        var inventory = FindObjectOfType<PlayerInventory>();
+        var inventory = GetPlayerInventory();
         Customer waitingCustomer = FindWaitingCustomer();
     }
 }

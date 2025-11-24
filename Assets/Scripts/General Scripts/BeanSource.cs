@@ -31,11 +31,7 @@ public class BeanSource : MonoBehaviour, IInteractable
     {
         if (playerInventory == null)
         {
-            PlayerInventory[] inventories = FindObjectsOfType<PlayerInventory>();
-            if (inventories.Length > 0)
-            {
-                playerInventory = inventories[0];
-            }
+            playerInventory = FindObjectOfType<PlayerInventory>();
         }
         
         if (playerInventory == null)
@@ -62,11 +58,7 @@ public class BeanSource : MonoBehaviour, IInteractable
     {
         if (playerInventory == null)
         {
-            PlayerInventory[] inventories = FindObjectsOfType<PlayerInventory>();
-            if (inventories.Length > 0)
-            {
-                playerInventory = inventories[0];
-            }
+            playerInventory = FindObjectOfType<PlayerInventory>();
         }
         
         if (playerInventory == null)

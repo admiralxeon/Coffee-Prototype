@@ -10,6 +10,7 @@ public class CoffeeCup : MonoBehaviour, IInteractable
 
     private CoffeeMachine parentMachine;
     private AudioSource audioSource;
+    private PlayerInventory cachedPlayerInventory;
 
     public void Initialize(CoffeeMachine machine)
     {
@@ -76,12 +77,21 @@ public class CoffeeCup : MonoBehaviour, IInteractable
         return "Press E - Take Coffee";
     }
 
+    private PlayerInventory GetPlayerInventory()
+    {
+        if (cachedPlayerInventory == null)
+        {
+            cachedPlayerInventory = FindObjectOfType<PlayerInventory>();
+        }
+        return cachedPlayerInventory;
+    }
+
     public bool CanInteract()
     {
         if (!canBePickedUp)
             return false;
 
-        PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+        PlayerInventory playerInventory = GetPlayerInventory();
         if (playerInventory == null)
             return false;
 
@@ -93,7 +103,7 @@ public class CoffeeCup : MonoBehaviour, IInteractable
         if (!CanInteract())
             return;
 
-        PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+        PlayerInventory playerInventory = GetPlayerInventory();
         if (playerInventory == null)
             return;
 

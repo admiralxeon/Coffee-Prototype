@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -43,19 +44,38 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
     
+    public event Action<int> OnMoneyChanged;
     public void AddMoney(int amount)
     {
         money += amount;
         customersServed++;
-        
+
+        OnMoneyChanged?.Invoke(amount);
         if (audioSource != null && moneyEarnedSound != null)
         {
             audioSource.PlayOneShot(moneyEarnedSound);
         }
-        
-        UpdateUI();
+   // Track statistics
+    if (GameStatistics.Instance != null)
+    {
+        GameStatistics.Instance.RecordCustomerServed(amount, 0f);
+    }
+          // Track achievements
+    if (AchievementSystem.Instance != null)
+    {
+        AchievementSystem.Instance.IncrementAchievement("serve_10", 1);
+        AchievementSystem.Instance.SetAchievementValue("money_maker", money);
     }
     
+    // Show UI feedback
+    if (EnhancedUIManager.Instance != null)
+    {
+        EnhancedUIManager.Instance.ShowMoneyGain(amount, Vector3.zero);
+    }
+
+    UpdateUI();
+}
+
     public int GetMoney()
     {
         return money;

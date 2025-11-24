@@ -58,17 +58,36 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
     
     public bool CanCarryItem(ItemType itemType)
     {
+        int effectiveMaxBeans = GetEffectiveMaxBeans();
+        int effectiveMaxCoffees = GetEffectiveMaxCoffees();
+        
         switch (itemType)
         {
             case ItemType.CoffeeBean:
-                return GetItemCount(ItemType.CoffeeBean) < maxBeans;
+                return GetItemCount(ItemType.CoffeeBean) < effectiveMaxBeans;
             case ItemType.CoffeeCup:
-                return GetItemCount(ItemType.CoffeeCup) < maxCoffees;
+                return GetItemCount(ItemType.CoffeeCup) < effectiveMaxCoffees;
             case ItemType.Money:
                 return true;
             default:
                 return false;
         }
+    }
+    
+    private int GetEffectiveMaxBeans()
+    {
+        int bonus = 0;
+        if (UpgradeSystem.Instance != null)
+        {
+            bonus = UpgradeSystem.Instance.GetInventoryCapacityBonus();
+        }
+        return maxBeans + bonus;
+    }
+    
+    private int GetEffectiveMaxCoffees()
+    {
+        // Coffee capacity could also be upgraded in the future
+        return maxCoffees;
     }
     
     public bool TryAddItem(ItemType itemType)
@@ -126,9 +145,9 @@ public class PlayerInventory : MonoBehaviour, IItemCarrier
         switch (itemType)
         {
             case ItemType.CoffeeBean:
-                return maxBeans;
+                return GetEffectiveMaxBeans();
             case ItemType.CoffeeCup:
-                return maxCoffees;
+                return GetEffectiveMaxCoffees();
             default:
                 return int.MaxValue;
         }

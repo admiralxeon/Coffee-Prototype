@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 movement;
     private bool isMoving;
     private bool wasMoving; // Track previous movement state for animation transitions
+    private float baseMoveSpeed; // Store original speed
 
     private readonly string SPEED_PARAM = "Speed";
     private readonly string IS_MOVING_PARAM = "IsMoving";
@@ -29,6 +30,9 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        
+        // Store base move speed for upgrade system
+        baseMoveSpeed = moveSpeed;
 
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
@@ -50,11 +54,25 @@ public class PlayerController : MonoBehaviour
             animator.SetTrigger(IDLE_TRIGGER);
         }
     }
-
+    
     void Update()
     {
         HandleInput();
+        ApplyUpgradeSpeed();
     }
+    
+    private void ApplyUpgradeSpeed()
+    {
+        if (UpgradeSystem.Instance != null)
+        {
+            moveSpeed = baseMoveSpeed * UpgradeSystem.Instance.GetMovementSpeedMultiplier();
+        }
+        else
+        {
+            moveSpeed = baseMoveSpeed;
+        }
+    }
+
 
     void FixedUpdate()
     {

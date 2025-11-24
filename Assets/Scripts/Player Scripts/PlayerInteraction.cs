@@ -42,11 +42,11 @@ public class PlayerInteraction : MonoBehaviour
             IInteractable interactable = col.GetComponent<IInteractable>();
             if (interactable != null && interactable.CanInteract())
             {
-                // Skip machines that have coffee ready (they can't be interacted with anyway)
+                // Skip machines that have coffee ready - prioritize the coffee cup instead
                 CoffeeMachine machine = interactable as CoffeeMachine;
-                if (machine != null && !machine.CanInteract())
+                if (machine != null && machine.HasCoffeeReady())
                 {
-                    continue; // Skip machines with coffee ready
+                    continue; // Skip machines with coffee ready, interact with the cup instead
                 }
 
                 float distance = Vector3.Distance(transform.position, col.transform.position);
